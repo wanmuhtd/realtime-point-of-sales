@@ -20,7 +20,8 @@ export async function createClient({ isAdmin = false } : CreateClientOptions) {
                 },
                 setAll(cookiesToSet) {
                     try{
-                        cookiesToSet.forEach(({name, value, options}) => cookieStore.set(name, value, options));
+                        cookiesToSet.forEach(({name, value, options}) => 
+                            cookieStore.set(name, value, options));
                     } catch {
                         console.error('Error setting cookies', cookiesToSet);
                     }
