@@ -17,20 +17,52 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
-import { LoginForm, loginSchema } from "@/validations/auth-validation";
-import { INITIAL_LOGIN_FORM } from "@/constants/auth-constant";
+import { LoginForm, loginSchemaForm } from "@/validations/auth-validation";
+import { INITIAL_LOGIN_FORM, INITIAL_STATE_LOGIN_FORM } from "@/constants/auth-constant";
 import { Button } from "@/components/ui/button";
+import FormInput from "@/components/common/form-input";
+import { Form, Loader2 } from "lucide-react";
+import { startTransition, use, useActionState, useEffect,} from "react";
+import { initialize } from "next/dist/server/lib/render-server";
+import { login } from "../action";
+import { start } from "repl";
+import { toast } from "sonner";
 
 export default function Login() {
 
     const form = useForm<LoginForm>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(loginSchemaForm),
         defaultValues: INITIAL_LOGIN_FORM,
     });
 
+    const [loginState, loginAction, isPendingLogin] = useActionState(
+        login, 
+        INITIAL_STATE_LOGIN_FORM
+    );
+
     const onSubmit = form.handleSubmit(async (data) => {
-        console.log(data);
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            formData.append(key, value);
+        });
+
+        startTransition(() => {
+            loginAction(formData);
+        });
     });
+
+    useEffect(() => {
+        if(loginState?.status === 'error') { 
+            toast.error('Login Failed', {
+                description: loginState.errors._form?.[0],
+            });
+            startTransition(() => {
+                loginAction(null)
+            });
+        }
+    }, [loginState]);
+
+    console.log(loginState);
 
     return (
         <Card>
@@ -41,55 +73,15 @@ export default function Login() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form id="login-form" onSubmit={onSubmit}>
-                    <FieldGroup>
-                        <Controller
-                            name="email"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-error={fieldState.invalid}>
-                                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="email"
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} className="text-xs"/>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
-                    <FieldGroup className="mt-4">
-                        <Controller 
-                            name="password"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field  data-error={fieldState.invalid}>
-                                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="password"
-                                        type="password"
-                                        placeholder="Enter your password"
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} className="text-xs"/>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
+                <form id="login-form" onSubmit={onSubmit} className="space-y-4">
+                    <FormInput form={form} name="email" label="Email" type="email" placeholder="Enter your email"/>
+                    <FormInput form={form} name="password" label="Password" type="password" placeholder="******"/>
                 </form>
             </CardContent>
             <CardFooter>
                 <Field orientation="horizontal" >
                     <Button type="submit" className="w-full" form ="login-form">
-                        Login
+                        {isPendingLogin ? <Loader2 className="animate-spin" /> : 'Login'}
                     </Button>
                 </Field>
             </CardFooter>
