@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { LoginForm, loginSchema } from "@/validations/auth-validation";
 import { INITIAL_LOGIN_FORM } from "@/constants/auth-constant";
 import { Button } from "@/components/ui/button";
+import FormInput from "@/components/common/form-input";
 
 export default function Login() {
 
@@ -29,7 +30,7 @@ export default function Login() {
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
-        console.log(data);
+        console.log(data); 
     });
 
     return (
@@ -41,49 +42,9 @@ export default function Login() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form id="login-form" onSubmit={onSubmit}>
-                    <FieldGroup>
-                        <Controller
-                            name="email"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-error={fieldState.invalid}>
-                                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="email"
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} className="text-xs"/>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
-                    <FieldGroup className="mt-4">
-                        <Controller 
-                            name="password"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field  data-error={fieldState.invalid}>
-                                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="password"
-                                        type="password"
-                                        placeholder="Enter your password"
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} className="text-xs"/>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
+                <form id="login-form" onSubmit={onSubmit} className="space-y-4">
+                    <FormInput form={form} name="email" label="Email" type="email" placeholder="Enter your email"/>
+                    <FormInput form={form} name="password" label="Password" type="password" placeholder="******"/>
                 </form>
             </CardContent>
             <CardFooter>
