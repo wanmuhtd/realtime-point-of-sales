@@ -17,21 +17,48 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
-import { LoginForm, loginSchema } from "@/validations/auth-validation";
-import { INITIAL_LOGIN_FORM } from "@/constants/auth-constant";
+import { LoginForm, loginSchemaForm } from "@/validations/auth-validation";
+import { INITIAL_LOGIN_FORM, INITIAL_STATE_LOGIN_FORM } from "@/constants/auth-constant";
 import { Button } from "@/components/ui/button";
 import FormInput from "@/components/common/form-input";
+import { Form, Loader2 } from "lucide-react";
+import { startTransition, use, useActionState, useEffect,} from "react";
+import { initialize } from "next/dist/server/lib/render-server";
+import { login } from "../action";
+import { start } from "repl";
 
 export default function Login() {
 
     const form = useForm<LoginForm>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(loginSchemaForm),
         defaultValues: INITIAL_LOGIN_FORM,
     });
 
+    const [loginState, loginAction, isPendingLogin] = useActionState(
+        login, 
+        INITIAL_STATE_LOGIN_FORM
+    );
+
     const onSubmit = form.handleSubmit(async (data) => {
-        console.log(data); 
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            formData.append(key, value);
+        });
+
+        startTransition(() => {
+            loginAction(formData);
+        });
     });
+
+    useEffect(() => {
+        if(loginState?.status === 'error') { 
+            startTransition(() => {
+                loginAction(null)
+            })
+        }
+    }, [loginState])
+
+    console.log(loginState);
 
     return (
         <Card>
@@ -50,7 +77,7 @@ export default function Login() {
             <CardFooter>
                 <Field orientation="horizontal" >
                     <Button type="submit" className="w-full" form ="login-form">
-                        Login
+                        {isPendingLogin ? <Loader2 className="animate-spin" /> : 'Login'}
                     </Button>
                 </Field>
             </CardFooter>
